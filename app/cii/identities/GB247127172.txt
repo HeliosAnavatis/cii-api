@@ -1,0 +1,20 @@
+{
+  "primaryScheme":"GB-COH",
+  "identifiers":
+  [
+    {
+      "scheme":"GB-COH",
+      "id":"01611136",
+      "uri":"https://beta.companieshouse.gov.uk/company/01611136",
+      "legalName":"Kier Limited"
+      "creationDate":"20190814T000000Z"
+    },
+    {
+      "scheme":"GB-VAT"
+      "id":"GB247127172",
+      "uri":"https://vat-search.co.uk/0X06_Kier+LTD",
+      "legalName":"Kier Limited"
+      "creationDate":"20190914T000000Z"
+    }
+  ]
+}

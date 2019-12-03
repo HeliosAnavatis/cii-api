@@ -1,0 +1,15 @@
+version: "2"
+services:
+  app:
+    container_name: ccs-cii
+    build:
+      context: ../
+      dockerfile: deployments/app/Dockerfile
+    ports:
+      - "5000:5000"
+    expose:
+      - "5000" 
+    volumes:
+      - type: "volume"
+      - source: "../../mysql"
+      - target: "/mysql"

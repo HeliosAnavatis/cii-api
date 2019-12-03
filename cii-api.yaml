@@ -1,0 +1,85 @@
+swagger: "2.0"
+info:
+  description: "This is an example CCS Central Identity Index Service API."
+  version: "1.0.0"
+  title: "CCS Central Identity Index Service"
+  termsOfService: "http://api.crowncommercial.gov.uk/terms/"
+  contact:
+    email: "apiteam@swagger.io"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "apis.crowncommercial.gov.uk"
+basePath: "/v2"
+tags:
+- name: "identities"
+  description: "Everything about Organisation Identities"
+  externalDocs:
+    description: "Find out more"
+    url: "http://apis.crowncommercial.gov.uk"
+schemes:
+- "https"
+- "http"
+paths:
+  /identities/organisations/id/{id}:
+    get:
+      tags:
+      - "identities"
+      summary: "Finds Organisations by ID"
+      operationId: "getOrgByID"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Registration identifier for the organisation"
+        required: true
+        type: "string"
+      - name: "scheme"
+        in: "query"
+        description: "Name of registry for the identifier"
+        type: "string"
+        default: "GB-COH"
+      - name: "ocds"
+        in: "query"
+        description: "return OCDS-compliant response"
+        type: "boolean"
+        default: "false"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Identities"
+        404:
+          description: "Organisation not found"
+    post:
+      parameters:
+      responses:
+        200:
+        400: 
+definitions:
+  Identity:
+    type: "object"
+    required:
+    - "scheme"
+    - "id"
+    properties:
+      scheme:
+        type: "string"
+      id:
+        type: "string"
+      uri:
+        type: "string"
+      legalName:
+        type: "string"
+  Identities:
+    type: "object"
+    properties:
+      primaryScheme:
+        type: "string"
+      items:
+        type: "array"
+        items:
+          $ref: "#/definitions/Identity"

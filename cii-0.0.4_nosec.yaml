@@ -1,0 +1,270 @@
+openapi: "3.0.0"
+info:
+  description: "This is an example CCS Central Identity Index (CII) Service API."
+  version: "0.0.4"
+  title: "CCS Central Identity Index Service (CII)"
+  termsOfService: "http://api.crowncommercial.gov.uk/terms/"
+  contact:
+    email: "apiteam@crowncommercial.gov.uk"
+  license:
+    name: "Open Government Licence 3.0"
+    url: "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+tags:
+- name: "identities"
+  description: "Everything about Organisation Identities"
+  externalDocs:
+    description: "Find out more"
+    url: "http://apis.crowncommercial.gov.uk"
+paths:
+#===============================================================================
+  /identities/schemes:
+    get:
+      summary: "Returns current list of registration schemes"
+      operationId: app.getSchemes
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchemeArray"
+        '404':
+          description: "Not Found"
+    post:
+      summary: "Add a registration scheme"
+      operationId: app.postScheme
+      parameters:
+      - in: query
+        name: "scheme"
+        schema:
+          $ref: "#/components/schemas/Scheme"
+        required: true
+        description: "Scheme Object"
+      responses:
+        '201':
+          description: "Created"
+        '405':
+          description: "Duplicate resource"
+
+#===============================================================================
+  /identities/schemes/{schemeid}:
+    get:
+      summary: "Returns scheme details"
+      operationId: app.getSchemeById
+      parameters:
+        - in: path
+          name: "schemeid"
+          schema:
+            type: string
+          example: "GBRCOHSE"
+          required: true
+          description: "ID of the scheme"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scheme"
+              example:
+                id: "GBRCOHSE"
+                name: "Companies House"
+                country: "GBR"
+                uri: "https://beta.companieshouse.gov.uk/"
+        '404':
+          description: "Not Found"
+    put:
+      summary: "Update a registration scheme"
+      operationId: app.putScheme
+      parameters:
+      - in: path
+        name: "schemeid"
+        schema:
+          type: string
+        example: "GBRCOHSE"
+        required: true
+        description: "ID of the scheme"
+      - in: query
+        name: "scheme"
+        schema:
+          $ref: "#/components/schemas/Scheme"
+        required: true
+        description: "Updated scheme object"
+      responses:
+        '200':
+          description: "Updated"
+
+#-------------------------------------------------------------------------------
+# QUESTION: Do we need a DELETE method?
+# [JW] - I'd argue not; why would we ever want to delete a registry?
+# [JW] - Added an "active" field to the 'scheme' object to show a scheme is
+#        in currentl use by CCS; we will still hold old schemes (and scheme
+#        registrations) for audit & historical purposes, but will not check
+#        against nor validate them
+#-------------------------------------------------------------------------------
+
+#===============================================================================
+  /identities/schemes/organisations:
+    get:
+      summary: Returns all organisations registered against any scheme matching the query string provided
+      operationId: app.getOrgSearch
+      parameters:
+        - in: query
+          name: querystr
+          schema:
+            type: string
+          required: true
+          description: Search term
+# TODO: Need pagination controls here
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgArray'
+        404:
+          description: Not Found
+
+#===============================================================================
+  /identities/schemes/{schemeid}/organisations:
+    get:
+      summary: Returns all organisations registered against the scheme specified
+      operationId: app.getOrgsByScheme
+      parameters:
+        - in: path
+          name: schemeid
+          schema:
+            type: string
+          required: true
+          description: ID of the scheme
+        - in: query
+          name: querystr
+          schema:
+            type: string
+          required: false
+          description: Search term
+# TODO: Need pagination controls here
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgArray'
+        404:
+          description: Not Found
+#===============================================================================
+  /identities/schemes/{schemeid}/organisations/{orgid}:
+    get:
+      summary: Retrieve information about a single organisation
+      operationId: app.getOrgById
+      parameters:
+      - in: path
+        name: schemeid
+        schema:
+          type: string
+        required: true
+        description: ID of the scheme
+      - in: path
+        name: orgid
+        schema:
+          type: string
+        required: true
+        description: ID of the organisation
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organisation'
+        404:
+          description: Not Found
+
+#===============================================================================
+# TODO: Define how we want the CII API to retrieve and display relationships
+# Option 1: /relationships - returns entire hierarchy (could get very big!)
+# Option 2: /parents and /children (possibly /owners and /controls?) - only 1 level each time? More API calls but easier to handle... Do we specify the number of levels to return?
+#  /identities/schemes/{schemeid}/organisations/{orgid}/relationships/:
+#    get:
+#      summary: Retrieve information about an organisation's relationships
+#===============================================================================
+
+#===============================================================================
+# TODO: Define how we want identifier matching to work
+# /identities/matches/[schemeid1,orgid1]/[schemeid2,orgid2]
+# 
+#===============================================================================
+components:
+  schemas:
+    Scheme:
+      type: "object"
+      required:
+      - "id"
+      - "name"
+      - "country"
+      - "uri"
+      - "active"
+      properties:
+        id:
+          description: "The identity code for the scheme"
+          type: "string"
+        name:
+          description: "A long name for the scheme"
+          type: "string"
+        country:
+          description: "The scheme's country of origin in ISO 3166-1 Alpha 3 format"
+          type: "string"
+        uri:
+          description: "The URI pointing to the scheme's website"
+          type: "string"
+        active:
+          description: "The scheme is classed as active by CCS"
+          type: boolean
+    SchemeArray:
+      type: "array"
+      items:
+        $ref: "#/components/schemas/Scheme"
+    Organisation:
+      type: object
+      required:
+      - id
+      - legalName
+      - uri
+      - scheme
+      - creationDate
+      - aliases
+#-------------------------------------------------------------------------------
+# QUESTION: What other info do we need to store in the organisation object?
+# [JW] - Do we need to know the 'status' of an organisation at this level?
+#        I would think possibly not - as we would look up status from the source
+#        registry.  Though we may want to do translation between source registry
+#        state labels.  e.g. "CLOSED", "WOUND UP", "EXPIRED" may all mean the
+#        same thing.
+#-------------------------------------------------------------------------------
+      properties:
+        id:
+          description: "The identity (supplied by the scheme) for the organisation"
+          type: string
+        legalName:
+          description: "The legal name of the organisation"
+          type: string
+        uri:
+          description: "The URI of the source record at the scheme"
+          type: string
+        scheme:
+          description: "The scheme ID for the identity of the organisation"
+          type: string
+        creationDate:
+          description: "The datestamp when the record was originally created"
+          type: string
+        aliases:
+          description: "An array of aliases of the organisation"
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgArray'
+    OrgArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/Organisation'
